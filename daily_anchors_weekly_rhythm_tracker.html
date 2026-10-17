@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Anchors — Daily Discipline</title>
+  <!-- Load Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            obsidian: '#09090b',
+            surface: '#121215',
+            surfaceHover: '#18181c',
+            borderSubtle: '#232329',
+            sage: {
+              400: '#34d399',
+              500: '#10b981',
+              900: '#064e3b',
+              950: '#022c22'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom calm styling and mobile tap refinements */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background-color: #09090b;
+      color: #f4f4f5;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      overscroll-behavior-y: none;
+    }
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #09090b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 2px;
+    }
+    .anchor-card {
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+    }
+    .anchor-card:active {
+      transform: scale(0.992);
+    }
+    input::placeholder {
+      color: #52525b;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-emerald-900 selection:text-emerald-200 pb-16">
+
+  <!-- Main Mobile-First Container -->
+  <div class="max-w-lg mx-auto px-4 pt-5 sm:pt-8 space-y-7">
+
+    <!-- TOP HEADER: Title & Running Streaks -->
+    <header class="space-y-4">
+      <div class="flex items-baseline justify-between">
+        <div>
+          <span class="text-[11px] font-mono uppercase tracking-widest text-zinc-500 block">Protocol</span>
+          <h1 id="header-date-title" class="text-xl font-semibold tracking-tight text-zinc-100">Today</h1>
+        </div>
+        <button id="jump-today-btn" onclick="jumpToToday()" class="hidden text-xs font-medium text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2.5 py-1 rounded-lg hover:bg-emerald-900/50 transition">
+          Return to Today
+        </button>
+      </div>
+
+      <!-- Streak Summary Cards -->
+      <div class="grid grid-cols-3 gap-2.5">
+        <div class="bg-surface border border-borderSubtle rounded-xl p-3 flex flex-col justify-between">
+          <span class="text-[11px] text-zinc-400 font-medium">Current Streak</span>
+          <div class="mt-1.5 flex items-baseline gap-1">
+            <span id="stat-current-streak" class="text-2xl font-mono font-semibold text-zinc-100">0</span>
+            <span class="text-xs text-zinc-500 font-mono">days</span>
+          </div>
+        </div>
+
+        <div class="bg-surface border border-borderSubtle rounded-xl p-3 flex flex-col justify-between">
+          <span class="text-[11px] text-zinc-400 font-medium">Longest Streak</span>
+          <div class="mt-1.5 flex items-baseline gap-1">
+            <span id="stat-longest-streak" class="text-2xl font-mono font-semibold text-zinc-100">0</span>
+            <span class="text-xs text-zinc-500 font-mono">days</span>
+          </div>
+        </div>
+
+        <div id="day-status-badge-card" class="bg-surface border border-borderSubtle rounded-xl p-3 flex flex-col justify-between transition-colors duration-200">
+          <span class="text-[11px] text-zinc-400 font-medium" id="selected-day-status-label">Day Status</span>
+          <div class="mt-1.5 flex items-baseline justify-between">
+            <span id="stat-day-progress" class="text-2xl font-mono font-semibold text-zinc-100">0/7</span>
+            <span id="stat-day-won-pill" class="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Open</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week Day Strip Navigation (Monday Start) -->
+      <div class="bg-surface border border-borderSubtle rounded-2xl p-2">
+        <div class="flex items-center justify-between px-2 pb-2 mb-1.5 border-b border-zinc-800/70">
+          <button onclick="shiftWeek(-1)" class="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-lg active:bg-zinc-800" aria-label="Previous week">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span id="week-range-label" class="text-xs font-mono text-zinc-400">Week</span>
+          <button onclick="shiftWeek(1)" class="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-lg active:bg-zinc-800" aria-label="Next week">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div id="week-strip-grid" class="grid grid-cols-7 gap-1">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </header>
+
+    <!-- SECTION 1: DAILY ANCHORS (MOST PROMINENT) -->
+    <section aria-labelledby="anchors-heading" class="space-y-3">
+      <div class="flex items-center justify-between px-0.5">
+        <div>
+          <h2 id="anchors-heading" class="text-sm font-semibold uppercase tracking-wider text-zinc-200">Daily Anchors</h2>
+          <p class="text-xs text-zinc-500 mt-0.5">All 7 required to win the day</p>
+        </div>
+        <span id="day-won-banner-inline" class="hidden text-xs font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          DAY WON
+        </span>
+      </div>
+
+      <!-- The 7 Anchors List -->
+      <div class="space-y-2.5" id="anchors-container">
+
+        <!-- 1. Wake at 6:00 AM -->
+        <button type="button" onclick="toggleSimpleAnchor('wake')" id="card-wake"
+          class="anchor-card w-full text-left bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3.5 focus:outline-none">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div id="check-wake" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+              <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="truncate">
+              <div class="text-base font-medium text-zinc-100 leading-snug" id="title-wake">Wake at 6:00 AM</div>
+              <div class="text-xs text-zinc-500 mt-0.5">Feet on the floor without snoozing</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono text-zinc-500 shrink-0">06:00</span>
+        </button>
+
+        <!-- 2. Reading 20–30 min on waking -->
+        <button type="button" onclick="toggleSimpleAnchor('reading')" id="card-reading"
+          class="anchor-card w-full text-left bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3.5 focus:outline-none">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div id="check-reading" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+              <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="truncate">
+              <div class="text-base font-medium text-zinc-100 leading-snug" id="title-reading">Reading 20–30 min on waking</div>
+              <div class="text-xs text-zinc-500 mt-0.5">Deep focus before checking phone</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono text-zinc-500 shrink-0">20–30m</span>
+        </button>
+
+        <!-- 3. Affirmations read (Morning & Night) -->
+        <div id="card-affirmations" class="anchor-card w-full bg-surface border border-borderSubtle rounded-2xl p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <button type="button" onclick="toggleBothAffirmations()" id="check-affirmations" aria-label="Toggle both affirmations"
+                class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+                <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </button>
+              <div class="truncate">
+                <div class="text-base font-medium text-zinc-100 leading-snug" id="title-affirmations">Affirmations read</div>
+                <div class="text-xs text-zinc-500 mt-0.5">Both Morning &amp; Night required</div>
+              </div>
+            </div>
+
+            <!-- Big thumb sub-toggles for AM and PM -->
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="toggleAffirmationPart('am')" id="btn-aff-am"
+                class="px-3 py-2 rounded-xl text-xs font-mono font-medium border border-zinc-700/80 bg-zinc-900 text-zinc-400 transition-colors min-w-[54px]">
+                AM
+              </button>
+              <button type="button" onclick="toggleAffirmationPart('pm')" id="btn-aff-pm"
+                class="px-3 py-2 rounded-xl text-xs font-mono font-medium border border-zinc-700/80 bg-zinc-900 text-zinc-400 transition-colors min-w-[54px]">
+                PM
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Boxing (Fixed days: Mon, Tue, Thu, Sat; Rest day otherwise) -->
+        <button type="button" onclick="toggleBoxingAnchor()" id="card-boxing"
+          class="anchor-card w-full text-left bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3.5 focus:outline-none">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div id="check-boxing" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+              <svg id="icon-boxing-check" class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="truncate">
+              <div class="flex items-center gap-2">
+                <span class="text-base font-medium text-zinc-100 leading-snug" id="title-boxing">Boxing</span>
+                <span id="badge-boxing-schedule" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-400">Training Day</span>
+              </div>
+              <div id="subtitle-boxing" class="text-xs text-zinc-500 mt-0.5">Mon, Tue, Thu, Sat schedule</div>
+            </div>
+          </div>
+          <span id="right-label-boxing" class="text-xs font-mono text-zinc-500 shrink-0">Session</span>
+        </button>
+
+        <!-- 5. No Alcohol (Simple Yes/No per day) -->
+        <div id="card-noAlcohol" class="anchor-card w-full bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3.5 min-w-0 cursor-pointer flex-1" onclick="toggleSimpleAnchor('noAlcohol')">
+            <div id="check-noAlcohol" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+              <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="truncate">
+              <div class="text-base font-medium text-zinc-100 leading-snug" id="title-noAlcohol">No alcohol</div>
+              <div class="text-xs text-zinc-500 mt-0.5">Zero drinks today</div>
+            </div>
+          </div>
+          <button type="button" onclick="toggleSimpleAnchor('noAlcohol')" id="pill-noAlcohol"
+            class="px-3.5 py-2 rounded-xl text-xs font-mono font-medium border border-zinc-700/80 bg-zinc-900 text-zinc-400 transition-colors shrink-0">
+            Log Clean
+          </button>
+        </div>
+
+        <!-- 6. Journal at 10 PM (with inline one-line text input) -->
+        <div id="card-journal" class="anchor-card w-full bg-surface border border-borderSubtle rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between gap-3.5 cursor-pointer" onclick="toggleSimpleAnchor('journal')">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <div id="check-journal" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+                <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div class="truncate">
+                <div class="text-base font-medium text-zinc-100 leading-snug" id="title-journal">Journal at 10:00 PM</div>
+                <div class="text-xs text-zinc-500 mt-0.5">One honest line to close the day</div>
+              </div>
+            </div>
+            <span class="text-xs font-mono text-zinc-500 shrink-0">22:00</span>
+          </div>
+
+          <div class="pl-10">
+            <input
+              type="text"
+              id="input-journal-text"
+              maxlength="180"
+              placeholder="Write one line from today..."
+              oninput="handleJournalInput(this.value)"
+              class="w-full bg-obsidian/90 border border-zinc-800 focus:border-emerald-600/70 rounded-xl px-3.5 py-2.5 text-sm text-zinc-200 focus:outline-none transition-colors"
+            />
+          </div>
+        </div>
+
+        <!-- 7. Wind-down at 10:00 PM, lights out by 10:30 PM -->
+        <button type="button" onclick="toggleSimpleAnchor('winddown')" id="card-winddown"
+          class="anchor-card w-full text-left bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3.5 focus:outline-none">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div id="check-winddown" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+              <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="truncate">
+              <div class="text-base font-medium text-zinc-100 leading-snug" id="title-winddown">Wind-down 10:00 PM · Lights out 10:30 PM</div>
+              <div class="text-xs text-zinc-500 mt-0.5">Screens off, room dark and cool</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono text-zinc-500 shrink-0">22:30</span>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- SECTION 2: WEEKLY HABITS (Tracked per week, Mon-Sun) -->
+    <section aria-labelledby="weekly-heading" class="space-y-3 pt-2">
+      <div class="flex items-center justify-between px-0.5">
+        <div>
+          <h2 id="weekly-heading" class="text-sm font-semibold uppercase tracking-wider text-zinc-200">Weekly Commitments</h2>
+          <p id="weekly-subheading" class="text-xs text-zinc-500 mt-0.5">Tracked once per week (Mon–Sun)</p>
+        </div>
+        <span id="weekly-progress-pill" class="text-xs font-mono text-zinc-400 bg-surface border border-borderSubtle px-2.5 py-1 rounded-lg">0/4</span>
+      </div>
+
+      <div class="space-y-2.5">
+        <!-- Weekly 1: One "must-finish" chosen Monday, completed by Friday -->
+        <div id="card-weekly-mustFinish" class="anchor-card bg-surface border border-borderSubtle rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between gap-3 cursor-pointer" onclick="toggleWeeklyHabit('mustFinishDone')">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <div id="check-weekly-mustFinish" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+                <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div class="truncate">
+                <div class="text-base font-medium text-zinc-100 leading-snug" id="title-weekly-mustFinish">One "Must-Finish" Deliverable</div>
+                <div class="text-xs text-zinc-500 mt-0.5">Chosen Monday · Shipped by Friday</div>
+              </div>
+            </div>
+            <span id="status-weekly-mustFinish" class="text-[11px] font-mono text-zinc-500 shrink-0">Mon→Fri</span>
+          </div>
+          <div class="pl-10">
+            <input
+              type="text"
+              id="input-weekly-mustFinish"
+              maxlength="120"
+              placeholder="Define this week's must-finish target..."
+              oninput="handleMustFinishInput(this.value)"
+              class="w-full bg-obsidian/90 border border-zinc-800 focus:border-emerald-600/70 rounded-xl px-3.5 py-2.5 text-sm text-zinc-200 focus:outline-none transition-colors"
+            />
+          </div>
+        </div>
+
+        <!-- Weekly 2: One solo activity (hike, run, bike) -->
+        <button type="button" onclick="toggleWeeklyHabit('soloActivity')" id="card-weekly-soloActivity"
+          class="anchor-card w-full text-left bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3.5 focus:outline-none">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div id="check-weekly-soloActivity" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+              <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="truncate">
+              <div class="text-base font-medium text-zinc-100 leading-snug" id="title-weekly-soloActivity">One solo endurance activity</div>
+              <div class="text-xs text-zinc-500 mt-0.5">Hike, outdoor run, or long bike ride</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono text-zinc-500 shrink-0">1× / wk</span>
+        </button>
+
+        <!-- Weekly 3: One hour with my brothers -->
+        <button type="button" onclick="toggleWeeklyHabit('brothersHour')" id="card-weekly-brothersHour"
+          class="anchor-card w-full text-left bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3.5 focus:outline-none">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div id="check-weekly-brothersHour" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+              <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="truncate">
+              <div class="text-base font-medium text-zinc-100 leading-snug" id="title-weekly-brothersHour">One hour with my brothers</div>
+              <div class="text-xs text-zinc-500 mt-0.5">Undivided time or call catching up</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono text-zinc-500 shrink-0">60m</span>
+        </button>
+
+        <!-- Weekly 4: Friday 15-minute money review -->
+        <button type="button" onclick="toggleWeeklyHabit('moneyReview')" id="card-weekly-moneyReview"
+          class="anchor-card w-full text-left bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3.5 focus:outline-none">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div id="check-weekly-moneyReview" class="w-7 h-7 rounded-xl border border-zinc-700 flex items-center justify-center shrink-0 transition-colors">
+              <svg class="w-4 h-4 text-obsidian opacity-0 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="truncate">
+              <div class="text-base font-medium text-zinc-100 leading-snug" id="title-weekly-moneyReview">Friday 15-minute money review</div>
+              <div class="text-xs text-zinc-500 mt-0.5">Check balances, spending, and transfers</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono text-zinc-500 shrink-0">Fri · 15m</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SECTION 3: WEEKLY INSIGHT & STREAK ANALYTICS -->
+    <section aria-labelledby="analytics-heading" class="space-y-4 pt-3">
+      <div class="px-0.5">
+        <h2 id="analytics-heading" class="text-sm font-semibold uppercase tracking-wider text-zinc-200">Consistency &amp; Review</h2>
+        <p class="text-xs text-zinc-500 mt-0.5">A day counts as won only when all 7 anchors are complete</p>
+      </div>
+
+      <!-- Calm Weekly Insight Banner -->
+      <div class="bg-surface border border-borderSubtle rounded-2xl p-4 flex items-start gap-3">
+        <div class="w-2 h-2 rounded-full bg-emerald-400 mt-1.5 shrink-0"></div>
+        <div class="space-y-1">
+          <div class="text-xs font-mono uppercase tracking-wider text-zinc-400">Pattern Insight</div>
+          <p id="insight-text" class="text-sm text-zinc-200 leading-relaxed">
+            Log your daily anchors to surface your strongest habits and most frequent friction point.
+          </p>
+        </div>
+      </div>
+
+      <!-- Weekly Streak Chart of "Days Won" (Last 8 Weeks) -->
+      <div class="bg-surface border border-borderSubtle rounded-2xl p-4 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-medium text-zinc-200">Weekly "Days Won"</h3>
+            <p class="text-xs text-zinc-500">Past 8 weeks (Mon–Sun)</p>
+          </div>
+          <span id="this-week-won-summary" class="text-xs font-mono text-emerald-400">0/7 this week</span>
+        </div>
+
+        <div id="weekly-bars-container" class="grid grid-cols-8 gap-2 items-end h-32 pt-4 px-1">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Monthly Calendar Heatmap -->
+      <div class="bg-surface border border-borderSubtle rounded-2xl p-4 space-y-3.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 id="heatmap-month-title" class="text-sm font-medium text-zinc-200">Month</h3>
+            <p class="text-xs text-zinc-500">Tap any date to inspect or update logs</p>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="shiftHeatmapMonth(-1)" class="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-lg active:bg-zinc-800" aria-label="Previous month">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button onclick="shiftHeatmapMonth(1)" class="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-lg active:bg-zinc-800" aria-label="Next month">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Weekday Headers (Mon-Sun) -->
+        <div class="grid grid-cols-7 gap-1.5 text-center">
+          <span class="text-[10px] font-mono text-zinc-500">M</span>
+          <span class="text-[10px] font-mono text-zinc-500">T</span>
+          <span class="text-[10px] font-mono text-zinc-500">W</span>
+          <span class="text-[10px] font-mono text-zinc-500">T</span>
+          <span class="text-[10px] font-mono text-zinc-500">F</span>
+          <span class="text-[10px] font-mono text-zinc-500">S</span>
+          <span class="text-[10px] font-mono text-zinc-500">S</span>
+        </div>
+
+        <!-- Calendar Days Grid -->
+        <div id="heatmap-grid" class="grid grid-cols-7 gap-1.5">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Legend -->
+        <div class="flex items-center justify-between pt-2 border-t border-zinc-800/70 text-[11px] text-zinc-400">
+          <div class="flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block"></span> Won (7/7)
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-emerald-950 border border-emerald-800/70 inline-block"></span> Partial
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-zinc-900 border border-zinc-800 inline-block"></span> Unlogged
+            </span>
+          </div>
+          <span id="month-win-count" class="font-mono text-zinc-400">0 won</span>
+        </div>
+      </div>
+
+      <!-- Recent Journal Lines Archive (Calm Reflection) -->
+      <div class="bg-surface border border-borderSubtle rounded-2xl p-4 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-medium text-zinc-200">Recent 10 PM Journal Lines</h3>
+          <span class="text-[11px] font-mono text-zinc-500">Last entries</span>
+        </div>
+        <div id="recent-journals-list" class="space-y-2 pt-1">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER: Local Data Backup & Restore -->
+    <footer class="pt-4 pb-8 border-t border-zinc-900 text-center space-y-3">
+      <div class="flex items-center justify-center gap-3">
+        <button onclick="exportData()" class="text-xs font-mono text-zinc-400 hover:text-zinc-200 bg-surface border border-borderSubtle px-3 py-1.5 rounded-lg transition">
+          Export Backup (JSON)
+        </button>
+        <label class="text-xs font-mono text-zinc-400 hover:text-zinc-200 bg-surface border border-borderSubtle px-3 py-1.5 rounded-lg transition cursor-pointer">
+          Import Backup
+          <input type="file" accept=".json,application/json" class="hidden" onchange="importData(event)" />
+        </label>
+      </div>
+      <p id="footer-status-msg" class="text-[11px] text-zinc-600 font-mono">Saved locally on this device · Week starts Monday</p>
+    </footer>
+
+  </div>
+
+  <script>
+    /********************************************************************
+     * STATE & STORAGE ARCHITECTURE
+     ********************************************************************/
+    const STORAGE_KEY = 'anchors_habit_tracker_v1';
+
+    // Boxing training days: Monday (1), Tuesday (2), Thursday (4), Saturday (6)
+    // Rest days: Wednesday (3), Friday (5), Sunday (0)
+    const BOXING_TRAINING_DAYS = [1, 2, 4, 6];
+
+    const ANCHOR_META = [
+      { id: 'wake', label: 'Wake at 6:00 AM' },
+      { id: 'reading', label: 'Reading 20–30 min' },
+      { id: 'affirmations', label: 'Affirmations (AM & PM)' },
+      { id: 'boxing', label: 'Boxing session' },
+      { id: 'noAlcohol', label: 'No alcohol' },
+      { id: 'journal', label: 'Journal at 10:00 PM' },
+      { id: 'winddown', label: 'Wind-down & lights out 10:30 PM' }
+    ];
+
+    let appData = {
+      days: {},   // keyed by 'YYYY-MM-DD'
+      weeks: {}   // keyed by Monday 'YYYY-MM-DD'
+    };
+
+    // Navigation state
+    let selectedDateStr = '';
+    let currentHeatmapYear = 2026;
+    let currentHeatmapMonth = 0; // 0-11
+
+    /********************************************************************
+     * DATE HELPERS (Local timezone safe, Monday-start week)
+     ********************************************************************/
+    function toDateStr(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseDateStr(str) {
+      const [y, m, d] = str.split('-').map(Number);
+      return new Date(y, m - 1, d, 12, 0, 0);
+    }
+
+    function getTodayStr() {
+      return toDateStr(new Date());
+    }
+
+    // Returns Monday of the week for any given date string
+    function getMondayStr(dateStr) {
+      const d = parseDateStr(dateStr);
+      const day = d.getDay(); // 0 (Sun) to 6 (Sat)
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diffToMonday);
+      return toDateStr(d);
+    }
+
+    function addDaysStr(dateStr, daysToAdd) {
+      const d = parseDateStr(dateStr);
+      d.setDate(d.getDate() + daysToAdd);
+      return toDateStr(d);
+    }
+
+    function isBoxingTrainingDay(dateStr) {
+      const d = parseDateStr(dateStr);
+      return BOXING_TRAINING_DAYS.includes(d.getDay());
+    }
+
+    /********************************************************************
+     * DATA ACCESSORS & "DAY WON" RULE EVALUATION
+     ********************************************************************/
+    function loadStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appData.days = parsed.days || {};
+          appData.weeks = parsed.weeks || {};
+        }
+      } catch (e) {
+        console.error('Failed to read localStorage:', e);
+      }
+    }
+
+    function saveStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      } catch (e) {
+        console.error('Failed to save localStorage:', e);
+      }
+    }
+
+    function getDayRecord(dateStr) {
+      if (!appData.days[dateStr]) {
+        return {
+          wake: false,
+          reading: false,
+          affirmationsAM: false,
+          affirmationsPM: false,
+          boxing: false,
+          noAlcohol: false,
+          journal: false,
+          journalText: '',
+          winddown: false
+        };
+      }
+      return appData.days[dateStr];
+    }
+
+    function ensureDayRecord(dateStr) {
+      if (!appData.days[dateStr]) {
+        appData.days[dateStr] = getDayRecord(dateStr);
+      }
+      return appData.days[dateStr];
+    }
+
+    function getWeekRecord(mondayStr) {
+      if (!appData.weeks[mondayStr]) {
+        return {
+          mustFinishText: '',
+          mustFinishDone: false,
+          soloActivity: false,
+          brothersHour: false,
+          moneyReview: false
+        };
+      }
+      return appData.weeks[mondayStr];
+    }
+
+    function ensureWeekRecord(mondayStr) {
+      if (!appData.weeks[mondayStr]) {
+        appData.weeks[mondayStr] = getWeekRecord(mondayStr);
+      }
+      return appData.weeks[mondayStr];
+    }
+
+    // Evaluates a single anchor on a given date
+    function isAnchorSatisfied(dateStr, anchorId) {
+      const rec = getDayRecord(dateStr);
+      switch (anchorId) {
+        case 'wake': return !!rec.wake;
+        case 'reading': return !!rec.reading;
+        case 'affirmations': return !!(rec.affirmationsAM && rec.affirmationsPM);
+        case 'boxing':
+          // Rest days automatically count as ticked/satisfied
+          if (!isBoxingTrainingDay(dateStr)) return true;
+          return !!rec.boxing;
+        case 'noAlcohol': return !!rec.noAlcohol;
+        case 'journal': return !!rec.journal;
+        case 'winddown': return !!rec.winddown;
+        default: return false;
+      }
+    }
+
+    // Checks if any manual interaction occurred on a date
+    function hasAnyManualActivity(dateStr) {
+      const rec = appData.days[dateStr];
+      if (!rec) return false;
+      return !!(
+        rec.wake ||
+        rec.reading ||
+        rec.affirmationsAM ||
+        rec.affirmationsPM ||
+        rec.boxing ||
+        rec.noAlcohol ||
+        rec.journal ||
+        (rec.journalText && rec.journalText.trim().length > 0) ||
+        rec.winddown
+      );
+    }
+
+    // Returns { count: 0..7, won: boolean }
+    function evaluateDay(dateStr) {
+      let count = 0;
+      for (const a of ANCHOR_META) {
+        if (isAnchorSatisfied(dateStr, a.id)) {
+          count++;
+        }
+      }
+      return {
+        count,
+        won: count === 7
+      };
+    }
+
+    /********************************************************************
+     * INTERACTION HANDLERS
+     ********************************************************************/
+    function toggleSimpleAnchor(key) {
+      const rec = ensureDayRecord(selectedDateStr);
+      rec[key] = !rec[key];
+      saveStorage();
+      renderAll();
+    }
+
+    function toggleAffirmationPart(part) {
+      const rec = ensureDayRecord(selectedDateStr);
+      if (part === 'am') {
+        rec.affirmationsAM = !rec.affirmationsAM;
+      } else {
+        rec.affirmationsPM = !rec.affirmationsPM;
+      }
+      saveStorage();
+      renderAll();
+    }
+
+    function toggleBothAffirmations() {
+      const rec = ensureDayRecord(selectedDateStr);
+      const bothDone = rec.affirmationsAM && rec.affirmationsPM;
+      rec.affirmationsAM = !bothDone;
+      rec.affirmationsPM = !bothDone;
+      saveStorage();
+      renderAll();
+    }
+
+    function toggleBoxingAnchor() {
+      if (!isBoxingTrainingDay(selectedDateStr)) {
+        // Rest day is automatically satisfied; no miss possible
+        return;
+      }
+      const rec = ensureDayRecord(selectedDateStr);
+      rec.boxing = !rec.boxing;
+      saveStorage();
+      renderAll();
+    }
+
+    function handleJournalInput(val) {
+      const rec = ensureDayRecord(selectedDateStr);
+      rec.journalText = val;
+      // Automatically tick journal if user writes a line, or keep ticked if they manually ticked
+      if (val.trim().length > 0) {
+        rec.journal = true;
+      }
+      saveStorage();
+      // Update UI without losing input focus
+      renderHeaderAndStreaks();
+      renderJournalCardStateOnly();
+      renderAnalytics();
+    }
+
+    function toggleWeeklyHabit(key) {
+      const mondayStr = getMondayStr(selectedDateStr);
+      const wRec = ensureWeekRecord(mondayStr);
+      wRec[key] = !wRec[key];
+      saveStorage();
+      renderWeeklySection();
+    }
+
+    function handleMustFinishInput(val) {
+      const mondayStr = getMondayStr(selectedDateStr);
+      const wRec = ensureWeekRecord(mondayStr);
+      wRec.mustFinishText = val;
+      saveStorage();
+    }
+
+    /********************************************************************
+     * NAVIGATION HANDLERS
+     ********************************************************************/
+    function selectDate(dateStr) {
+      selectedDateStr = dateStr;
+      const d = parseDateStr(dateStr);
+      currentHeatmapYear = d.getFullYear();
+      currentHeatmapMonth = d.getMonth();
+      renderAll();
+    }
+
+    function jumpToToday() {
+      selectDate(getTodayStr());
+    }
+
+    function shiftWeek(deltaWeeks) {
+      selectedDateStr = addDaysStr(selectedDateStr, deltaWeeks * 7);
+      const d = parseDateStr(selectedDateStr);
+      currentHeatmapYear = d.getFullYear();
+      currentHeatmapMonth = d.getMonth();
+      renderAll();
+    }
+
+    function shiftHeatmapMonth(deltaMonths) {
+      const d = new Date(currentHeatmapYear, currentHeatmapMonth + deltaMonths, 1);
+      currentHeatmapYear = d.getFullYear();
+      currentHeatmapMonth = d.getMonth();
+      renderHeatmap();
+    }
+
+    /********************************************************************
+     * STREAKS & INSIGHT CALCULATIONS
+     ********************************************************************/
+    function calculateStreaks() {
+      const todayStr = getTodayStr();
+      const yesterdayStr = addDaysStr(todayStr, -1);
+
+      // Current Streak: if today is won, count backwards from today;
+      // otherwise if yesterday is won, count backwards from yesterday.
+      let currentStreak = 0;
+      let cursor = evaluateDay(todayStr).won ? todayStr : (evaluateDay(yesterdayStr).won ? yesterdayStr : null);
+
+      if (cursor) {
+        while (evaluateDay(cursor).won) {
+          currentStreak++;
+          cursor = addDaysStr(cursor, -1);
+          if (currentStreak > 3650) break; // safety guard
+        }
+      }
+
+      // Longest streak across all recorded dates
+      const allDates = Object.keys(appData.days).sort();
+      let longestStreak = currentStreak;
+      if (allDates.length > 0) {
+        const firstDate = allDates[0];
+        const lastDate = allDates[allDates.length - 1] > todayStr ? allDates[allDates.length - 1] : todayStr;
+        let iter = firstDate;
+        let running = 0;
+        let safety = 0;
+        while (iter <= lastDate && safety < 5000) {
+          if (evaluateDay(iter).won) {
+            running++;
+            if (running > longestStreak) longestStreak = running;
+          } else {
+            running = 0;
+          }
+          iter = addDaysStr(iter, 1);
+          safety++;
+        }
+      }
+
+      return { currentStreak, longestStreak };
+    }
+
+    function generateWeeklyInsight() {
+      const todayStr = getTodayStr();
+      // Examine logged days over the last 14 days (up to today)
+      const activeDays = [];
+      for (let i = 0; i < 14; i++) {
+        const dStr = addDaysStr(todayStr, -i);
+        if (hasAnyManualActivity(dStr)) {
+          activeDays.push(dStr);
+        }
+      }
+
+      if (activeDays.length === 0) {
+        return 'Tick off today’s anchors as you move through the day. Once you have a few days logged, this line will highlight which anchor slips most often.';
+      }
+
+      const missCounts = {};
+      ANCHOR_META.forEach(a => { missCounts[a.id] = 0; });
+
+      let daysWonCount = 0;
+      activeDays.forEach(dStr => {
+        const evalRes = evaluateDay(dStr);
+        if (evalRes.won) daysWonCount++;
+        ANCHOR_META.forEach(a => {
+          if (!isAnchorSatisfied(dStr, a.id)) {
+            missCounts[a.id]++;
+          }
+        });
+      });
+
+      if (daysWonCount === activeDays.length) {
+        return `Flawless execution across ${activeDays.length} logged day${activeDays.length > 1 ? 's' : ''} (${daysWonCount}/${activeDays.length} days won). Zero missed anchors.`;
+      }
+
+      // Find the anchor with the highest misses
+      let topMissed = null;
+      let maxMisses = 0;
+      ANCHOR_META.forEach(a => {
+        if (missCounts[a.id] > maxMisses) {
+          maxMisses = missCounts[a.id];
+          topMissed = a;
+        }
+      });
+
+      if (!topMissed || maxMisses === 0) {
+        return `You have won ${daysWonCount} of your last ${activeDays.length} active days. Keep protecting your evening wind-down.`;
+      }
+
+      return `Across your last ${activeDays.length} logged day${activeDays.length > 1 ? 's' : ''}, "${topMissed.label}" is your most frequent friction point (missed ${maxMisses}×). Protect that anchor tomorrow.`;
+    }
+
+    /********************************************************************
+     * RENDERING FUNCTIONS
+     ********************************************************************/
+    function styleAnchorCard(cardEl, checkEl, titleEl, isDone, isRestDay = false) {
+      const svg = checkEl.querySelector('svg');
+      if (isDone) {
+        cardEl.className = 'anchor-card w-full text-left bg-emerald-950/20 border border-emerald-800/50 rounded-2xl p-4 flex items-center justify-between gap-3.5 focus:outline-none';
+        checkEl.className = isRestDay
+          ? 'w-7 h-7 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0 transition-colors'
+          : 'w-7 h-7 rounded-xl bg-emerald-500 border border-emerald-400 flex items-center justify-center shrink-0 transition-colors';
+        if (svg) {
+          svg.classList.remove('opacity-0');
+          svg.classList.add('opacity-100');
+          svg.classList.toggle('text-emerald-400', isRestDay);
+          svg.classList.toggle('text-obsidian', !isRestDay);
+        }
+        titleEl.className = 'text-base font-medium text-zinc-300 leading-snug';
+      } else {
+        cardEl.className = 'anchor-card w-full text-left bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3.5 focus:outline-none';
+        checkEl.className = 'w-7 h-7 rounded-xl border border-zinc-700 bg-obsidian/60 flex items-center justify-center shrink-0 transition-colors';
+        if (svg) {
+          svg.classList.add('opacity-0');
+          svg.classList.remove('opacity-100');
+        }
+        titleEl.className = 'text-base font-medium text-zinc-100 leading-snug';
+      }
+    }
+
+    function renderHeaderAndStreaks() {
+      const todayStr = getTodayStr();
+      const d = parseDateStr(selectedDateStr);
+      const isToday = selectedDateStr === todayStr;
+      const yesterdayStr = addDaysStr(todayStr, -1);
+      const isYesterday = selectedDateStr === yesterdayStr;
+
+      const formattedDate = d.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric'
+      });
+
+      const titleEl = document.getElementById('header-date-title');
+      if (isToday) {
+        titleEl.textContent = `Today · ${formattedDate}`;
+      } else if (isYesterday) {
+        titleEl.textContent = `Yesterday · ${formattedDate}`;
+      } else {
+        titleEl.textContent = formattedDate;
+      }
+
+      const jumpBtn = document.getElementById('jump-today-btn');
+      jumpBtn.classList.toggle('hidden', isToday);
+
+      // Streaks
+      const { currentStreak, longestStreak } = calculateStreaks();
+      document.getElementById('stat-current-streak').textContent = currentStreak;
+      document.getElementById('stat-longest-streak').textContent = longestStreak;
+
+      // Selected Day Progress & Status
+      const evalRes = evaluateDay(selectedDateStr);
+      document.getElementById('stat-day-progress').textContent = `${evalRes.count}/7`;
+
+      const statusCard = document.getElementById('day-status-badge-card');
+      const statusPill = document.getElementById('stat-day-won-pill');
+      const inlineWonBanner = document.getElementById('day-won-banner-inline');
+
+      if (evalRes.won) {
+        statusCard.className = 'bg-emerald-950/30 border border-emerald-800/60 rounded-xl p-3 flex flex-col justify-between transition-colors duration-200';
+        statusPill.className = 'text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500 text-obsidian font-semibold';
+        statusPill.textContent = 'Won';
+        inlineWonBanner.classList.remove('hidden');
+      } else {
+        statusCard.className = 'bg-surface border border-borderSubtle rounded-xl p-3 flex flex-col justify-between transition-colors duration-200';
+        statusPill.className = 'text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400';
+        statusPill.textContent = selectedDateStr < todayStr ? 'Missed' : 'Open';
+        inlineWonBanner.classList.add('hidden');
+      }
+
+      // Render Monday-Sunday Week Strip
+      const mondayStr = getMondayStr(selectedDateStr);
+      const sundayStr = addDaysStr(mondayStr, 6);
+      const monDate = parseDateStr(mondayStr);
+      const sunDate = parseDateStr(sundayStr);
+
+      const rangeFmt = `${monDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${sunDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      document.getElementById('week-range-label').textContent = rangeFmt;
+
+      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const stripGrid = document.getElementById('week-strip-grid');
+      stripGrid.innerHTML = '';
+
+      for (let i = 0; i < 7; i++) {
+        const curStr = addDaysStr(mondayStr, i);
+        const curDate = parseDateStr(curStr);
+        const isSelected = curStr === selectedDateStr;
+        const isCurToday = curStr === todayStr;
+        const dayEval = evaluateDay(curStr);
+        const anyAct = hasAnyManualActivity(curStr);
+
+        let dotClass = 'bg-zinc-800';
+        if (dayEval.won) {
+          dotClass = 'bg-emerald-400';
+        } else if (anyAct) {
+          dotClass = 'bg-emerald-700/70';
+        }
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => selectDate(curStr);
+        btn.className = `flex flex-col items-center py-2 rounded-xl transition-colors ${
+          isSelected
+            ? 'bg-zinc-800/90 border border-zinc-600 text-zinc-100'
+            : 'hover:bg-zinc-900 text-zinc-400 border border-transparent'
+        }`;
+
+        btn.innerHTML = `
+          <span class="text-[10px] font-mono uppercase ${isCurToday ? 'text-emerald-400 font-semibold' : ''}">${dayNames[i]}</span>
+          <span class="text-sm font-mono font-medium mt-0.5 ${isSelected ? 'text-white' : 'text-zinc-300'}">${curDate.getDate()}</span>
+          <span class="w-1.5 h-1.5 rounded-full mt-1.5 ${dotClass}"></span>
+        `;
+        stripGrid.appendChild(btn);
+      }
+    }
+
+    function renderJournalCardStateOnly() {
+      const rec = getDayRecord(selectedDateStr);
+      const cardEl = document.getElementById('card-journal');
+      const checkEl = document.getElementById('check-journal');
+      const titleEl = document.getElementById('title-journal');
+      const svg = checkEl.querySelector('svg');
+
+      if (rec.journal) {
+        cardEl.className = 'anchor-card w-full bg-emerald-950/20 border border-emerald-800/50 rounded-2xl p-4 space-y-3';
+        checkEl.className = 'w-7 h-7 rounded-xl bg-emerald-500 border border-emerald-400 flex items-center justify-center shrink-0 transition-colors';
+        svg.classList.remove('opacity-0');
+        svg.classList.add('opacity-100');
+        titleEl.className = 'text-base font-medium text-zinc-300 leading-snug';
+      } else {
+        cardEl.className = 'anchor-card w-full bg-surface border border-borderSubtle rounded-2xl p-4 space-y-3';
+        checkEl.className = 'w-7 h-7 rounded-xl border border-zinc-700 bg-obsidian/60 flex items-center justify-center shrink-0 transition-colors';
+        svg.classList.add('opacity-0');
+        svg.classList.remove('opacity-100');
+        titleEl.className = 'text-base font-medium text-zinc-100 leading-snug';
+      }
+    }
+
+    function renderDailyAnchors() {
+      const rec = getDayRecord(selectedDateStr);
+
+      // 1. Wake at 6:00 AM
+      styleAnchorCard(
+        document.getElementById('card-wake'),
+        document.getElementById('check-wake'),
+        document.getElementById('title-wake'),
+        rec.wake
+      );
+
+      // 2. Reading 20-30m
+      styleAnchorCard(
+        document.getElementById('card-reading'),
+        document.getElementById('check-reading'),
+        document.getElementById('title-reading'),
+        rec.reading
+      );
+
+      // 3. Affirmations (AM + PM)
+      const bothAff = rec.affirmationsAM && rec.affirmationsPM;
+      const affCard = document.getElementById('card-affirmations');
+      const affCheck = document.getElementById('check-affirmations');
+      const affSvg = affCheck.querySelector('svg');
+      const btnAM = document.getElementById('btn-aff-am');
+      const btnPM = document.getElementById('btn-aff-pm');
+
+      if (bothAff) {
+        affCard.className = 'anchor-card w-full bg-emerald-950/20 border border-emerald-800/50 rounded-2xl p-4';
+        affCheck.className = 'w-7 h-7 rounded-xl bg-emerald-500 border border-emerald-400 flex items-center justify-center shrink-0 transition-colors';
+        affSvg.classList.remove('opacity-0');
+        affSvg.classList.add('opacity-100');
+      } else {
+        affCard.className = 'anchor-card w-full bg-surface border border-borderSubtle rounded-2xl p-4';
+        affCheck.className = 'w-7 h-7 rounded-xl border border-zinc-700 bg-obsidian/60 flex items-center justify-center shrink-0 transition-colors';
+        affSvg.classList.add('opacity-0');
+        affSvg.classList.remove('opacity-100');
+      }
+
+      btnAM.className = rec.affirmationsAM
+        ? 'px-3 py-2 rounded-xl text-xs font-mono font-semibold border border-emerald-500/60 bg-emerald-500/20 text-emerald-300 transition-colors min-w-[54px]'
+        : 'px-3 py-2 rounded-xl text-xs font-mono font-medium border border-zinc-700/80 bg-zinc-900 text-zinc-400 transition-colors min-w-[54px]';
+
+      btnPM.className = rec.affirmationsPM
+        ? 'px-3 py-2 rounded-xl text-xs font-mono font-semibold border border-emerald-500/60 bg-emerald-500/20 text-emerald-300 transition-colors min-w-[54px]'
+        : 'px-3 py-2 rounded-xl text-xs font-mono font-medium border border-zinc-700/80 bg-zinc-900 text-zinc-400 transition-colors min-w-[54px]';
+
+      // 4. Boxing (Fixed days: Mon, Tue, Thu, Sat; Rest Day on Wed, Fri, Sun)
+      const trainingDay = isBoxingTrainingDay(selectedDateStr);
+      const boxingDone = trainingDay ? rec.boxing : true;
+      const boxingBadge = document.getElementById('badge-boxing-schedule');
+      const boxingSubtitle = document.getElementById('subtitle-boxing');
+      const boxingRightLabel = document.getElementById('right-label-boxing');
+
+      styleAnchorCard(
+        document.getElementById('card-boxing'),
+        document.getElementById('check-boxing'),
+        document.getElementById('title-boxing'),
+        boxingDone,
+        !trainingDay
+      );
+
+      if (trainingDay) {
+        boxingBadge.textContent = 'Training Day';
+        boxingBadge.className = rec.boxing
+          ? 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-900/60 text-emerald-300'
+          : 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300';
+        boxingSubtitle.textContent = 'Scheduled boxing day (Mon, Tue, Thu, Sat)';
+        boxingRightLabel.textContent = rec.boxing ? 'Done' : 'Session';
+      } else {
+        boxingBadge.textContent = 'Rest Day';
+        boxingBadge.className = 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-400';
+        boxingSubtitle.textContent = 'Scheduled recovery · Automatically counts as ticked';
+        boxingRightLabel.textContent = 'Auto ✓';
+      }
+
+      // 5. No alcohol
+      const noAlcCard = document.getElementById('card-noAlcohol');
+      const noAlcCheck = document.getElementById('check-noAlcohol');
+      const noAlcSvg = noAlcCheck.querySelector('svg');
+      const noAlcPill = document.getElementById('pill-noAlcohol');
+
+      if (rec.noAlcohol) {
+        noAlcCard.className = 'anchor-card w-full bg-emerald-950/20 border border-emerald-800/50 rounded-2xl p-4 flex items-center justify-between gap-3';
+        noAlcCheck.className = 'w-7 h-7 rounded-xl bg-emerald-500 border border-emerald-400 flex items-center justify-center shrink-0 transition-colors';
+        noAlcSvg.classList.remove('opacity-0');
+        noAlcSvg.classList.add('opacity-100');
+        noAlcPill.textContent = 'Yes · Clean';
+        noAlcPill.className = 'px-3.5 py-2 rounded-xl text-xs font-mono font-semibold border border-emerald-500/60 bg-emerald-500/20 text-emerald-300 transition-colors shrink-0';
+      } else {
+        noAlcCard.className = 'anchor-card w-full bg-surface border border-borderSubtle rounded-2xl p-4 flex items-center justify-between gap-3';
+        noAlcCheck.className = 'w-7 h-7 rounded-xl border border-zinc-700 bg-obsidian/60 flex items-center justify-center shrink-0 transition-colors';
+        noAlcSvg.classList.add('opacity-0');
+        noAlcSvg.classList.remove('opacity-100');
+        noAlcPill.textContent = 'Mark Yes';
+        noAlcPill.className = 'px-3.5 py-2 rounded-xl text-xs font-mono font-medium border border-zinc-700/80 bg-zinc-900 text-zinc-400 transition-colors shrink-0';
+      }
+
+      // 6. Journal at 10 PM
+      renderJournalCardStateOnly();
+      const journalInput = document.getElementById('input-journal-text');
+      if (document.activeElement !== journalInput) {
+        journalInput.value = rec.journalText || '';
+      }
+
+      // 7. Wind-down 10:00 PM / Lights out 10:30 PM
+      styleAnchorCard(
+        document.getElementById('card-winddown'),
+        document.getElementById('check-winddown'),
+        document.getElementById('title-winddown'),
+        rec.winddown
+      );
+    }
+
+    function renderWeeklySection() {
+      const mondayStr = getMondayStr(selectedDateStr);
+      const wRec = getWeekRecord(mondayStr);
+
+      let completedCount = 0;
+      if (wRec.mustFinishDone) completedCount++;
+      if (wRec.soloActivity) completedCount++;
+      if (wRec.brothersHour) completedCount++;
+      if (wRec.moneyReview) completedCount++;
+
+      document.getElementById('weekly-progress-pill').textContent = `${completedCount}/4 completed`;
+
+      // Must-finish deliverable card
+      const mfCard = document.getElementById('card-weekly-mustFinish');
+      const mfCheck = document.getElementById('check-weekly-mustFinish');
+      const mfSvg = mfCheck.querySelector('svg');
+      const mfStatus = document.getElementById('status-weekly-mustFinish');
+      const mfInput = document.getElementById('input-weekly-mustFinish');
+
+      if (wRec.mustFinishDone) {
+        mfCard.className = 'anchor-card bg-emerald-950/20 border border-emerald-800/50 rounded-2xl p-4 space-y-3';
+        mfCheck.className = 'w-7 h-7 rounded-xl bg-emerald-500 border border-emerald-400 flex items-center justify-center shrink-0 transition-colors';
+        mfSvg.classList.remove('opacity-0');
+        mfSvg.classList.add('opacity-100');
+        mfStatus.textContent = 'Shipped ✓';
+        mfStatus.className = 'text-[11px] font-mono text-emerald-400 shrink-0';
+      } else {
+        mfCard.className = 'anchor-card bg-surface border border-borderSubtle rounded-2xl p-4 space-y-3';
+        mfCheck.className = 'w-7 h-7 rounded-xl border border-zinc-700 bg-obsidian/60 flex items-center justify-center shrink-0 transition-colors';
+        mfSvg.classList.add('opacity-0');
+        mfSvg.classList.remove('opacity-100');
+        mfStatus.textContent = 'Mon→Fri';
+        mfStatus.className = 'text-[11px] font-mono text-zinc-500 shrink-0';
+      }
+
+      if (document.activeElement !== mfInput) {
+        mfInput.value = wRec.mustFinishText || '';
+      }
+
+      // Other 3 weekly habits
+      styleAnchorCard(
+        document.getElementById('card-weekly-soloActivity'),
+        document.getElementById('check-weekly-soloActivity'),
+        document.getElementById('title-weekly-soloActivity'),
+        wRec.soloActivity
+      );
+
+      styleAnchorCard(
+        document.getElementById('card-weekly-brothersHour'),
+        document.getElementById('check-weekly-brothersHour'),
+        document.getElementById('title-weekly-brothersHour'),
+        wRec.brothersHour
+      );
+
+      styleAnchorCard(
+        document.getElementById('card-weekly-moneyReview'),
+        document.getElementById('check-weekly-moneyReview'),
+        document.getElementById('title-weekly-moneyReview'),
+        wRec.moneyReview
+      );
+    }
+
+    function renderAnalytics() {
+      // 1. Insight Line
+      document.getElementById('insight-text').textContent = generateWeeklyInsight();
+
+      // 2. Weekly "Days Won" Bar Chart (Past 8 weeks ending with current week)
+      const currentMondayStr = getMondayStr(getTodayStr());
+      const selectedMondayStr = getMondayStr(selectedDateStr);
+      const barsContainer = document.getElementById('weekly-bars-container');
+      barsContainer.innerHTML = '';
+
+      for (let w = 7; w >= 0; w--) {
+        const weekMonStr = addDaysStr(currentMondayStr, -w * 7);
+        let wonInWeek = 0;
+        for (let d = 0; d < 7; d++) {
+          const dayStr = addDaysStr(weekMonStr, d);
+          if (evaluateDay(dayStr).won) wonInWeek++;
+        }
+
+        if (w === 0) {
+          document.getElementById('this-week-won-summary').textContent = `${wonInWeek}/7 won this week`;
+        }
+
+        const heightPct = Math.max(8, Math.round((wonInWeek / 7) * 100));
+        const monDate = parseDateStr(weekMonStr);
+        const label = `${monDate.getMonth() + 1}/${monDate.getDate()}`;
+        const isSelectedWeek = weekMonStr === selectedMondayStr;
+
+        const col = document.createElement('button');
+        col.type = 'button';
+        col.onclick = () => selectDate(weekMonStr);
+        col.className = 'flex flex-col items-center justify-end h-full group focus:outline-none';
+        col.innerHTML = `
+          <span class="text-[10px] font-mono ${wonInWeek > 0 ? 'text-emerald-400' : 'text-zinc-600'} mb-1">${wonInWeek}</span>
+          <div class="w-full max-w-[24px] bg-zinc-900 rounded-md h-20 flex items-end p-0.5 border ${isSelectedWeek ? 'border-zinc-600' : 'border-zinc-800/80'}">
+            <div class="w-full rounded-sm transition-all duration-300 ${wonInWeek === 7 ? 'bg-emerald-400' : (wonInWeek > 0 ? 'bg-emerald-600/80' : 'bg-zinc-800')}" style="height: ${heightPct}%"></div>
+          </div>
+          <span class="text-[10px] font-mono ${isSelectedWeek ? 'text-zinc-200 font-semibold' : 'text-zinc-500'} mt-1.5">${w === 0 ? 'Now' : label}</span>
+        `;
+        barsContainer.appendChild(col);
+      }
+
+      // 3. Monthly Calendar Heatmap
+      renderHeatmap();
+
+      // 4. Recent Journal Lines
+      renderRecentJournals();
+    }
+
+    function renderHeatmap() {
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      document.getElementById('heatmap-month-title').textContent = `${monthNames[currentHeatmapMonth]} ${currentHeatmapYear}`;
+
+      const grid = document.getElementById('heatmap-grid');
+      grid.innerHTML = '';
+
+      const firstOfMonth = new Date(currentHeatmapYear, currentHeatmapMonth, 1, 12, 0, 0);
+      const daysInMonth = new Date(currentHeatmapYear, currentHeatmapMonth + 1, 0).getDate();
+
+      // Monday-based offset: Mon=0 ... Sun=6
+      const jsDay = firstOfMonth.getDay();
+      const mondayOffset = jsDay === 0 ? 6 : jsDay - 1;
+
+      for (let i = 0; i < mondayOffset; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'h-9 rounded-lg';
+        grid.appendChild(empty);
+      }
+
+      const todayStr = getTodayStr();
+      let monthWins = 0;
+
+      for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+        const dObj = new Date(currentHeatmapYear, currentHeatmapMonth, dayNum, 12, 0, 0);
+        const dStr = toDateStr(dObj);
+        const evalRes = evaluateDay(dStr);
+        const anyAct = hasAnyManualActivity(dStr);
+        const isSelected = dStr === selectedDateStr;
+        const isToday = dStr === todayStr;
+
+        if (evalRes.won) monthWins++;
+
+        let bgClass = 'bg-zinc-900/90 border-zinc-800/80 text-zinc-400';
+        if (evalRes.won) {
+          bgClass = 'bg-emerald-500 border-emerald-400 text-obsidian font-semibold';
+        } else if (anyAct) {
+          bgClass = 'bg-emerald-950/90 border-emerald-800/70 text-emerald-300';
+        }
+
+        const ringClass = isSelected ? 'ring-2 ring-zinc-200 ring-offset-1 ring-offset-obsidian' : (isToday ? 'border-zinc-500' : '');
+
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.onclick = () => selectDate(dStr);
+        cell.className = `h-9 rounded-lg border text-xs font-mono flex items-center justify-center transition ${bgClass} ${ringClass}`;
+        cell.textContent = dayNum;
+        grid.appendChild(cell);
+      }
+
+      document.getElementById('month-win-count').textContent = `${monthWins} day${monthWins === 1 ? '' : 's'} won`;
+    }
+
+    function renderRecentJournals() {
+      const container = document.getElementById('recent-journals-list');
+      const entries = Object.keys(appData.days)
+        .filter(dStr => appData.days[dStr]?.journalText && appData.days[dStr].journalText.trim().length > 0)
+        .sort()
+        .reverse()
+        .slice(0, 5);
+
+      if (entries.length === 0) {
+        container.innerHTML = `<p class="text-xs text-zinc-500 italic">Your 10:00 PM one-line journal entries will appear here.</p>`;
+        return;
+      }
+
+      container.innerHTML = entries.map(dStr => {
+        const dObj = parseDateStr(dStr);
+        const dateFmt = dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const safeText = appData.days[dStr].journalText
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        return `
+          <div onclick="selectDate('${dStr}')" class="flex items-baseline gap-3 py-1.5 border-b border-zinc-800/50 last:border-0 cursor-pointer hover:bg-zinc-900/40 rounded px-1">
+            <span class="text-[11px] font-mono text-zinc-500 shrink-0 w-12">${dateFmt}</span>
+            <p class="text-xs text-zinc-300 truncate">${safeText}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAll() {
+      renderHeaderAndStreaks();
+      renderDailyAnchors();
+      renderWeeklySection();
+      renderAnalytics();
+    }
+
+    /********************************************************************
+     * EXPORT / IMPORT JSON BACKUP
+     ********************************************************************/
+    function exportData() {
+      const dataStr = JSON.stringify(appData, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `anchors-backup-${getTodayStr()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showFooterMessage('Backup exported');
+    }
+
+    function importData(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && typeof parsed === 'object') {
+            appData.days = parsed.days || {};
+            appData.weeks = parsed.weeks || {};
+            saveStorage();
+            renderAll();
+            showFooterMessage('Backup restored successfully');
+          }
+        } catch (err) {
+          showFooterMessage('Invalid backup file format');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function showFooterMessage(msg) {
+      const el = document.getElementById('footer-status-msg');
+      el.textContent = msg;
+      el.className = 'text-[11px] text-emerald-400 font-mono';
+      setTimeout(() => {
+        el.textContent = 'Saved locally on this device · Week starts Monday';
+        el.className = 'text-[11px] text-zinc-600 font-mono';
+      }, 3000);
+    }
+
+    /********************************************************************
+     * INITIALIZE ON LOAD
+     ********************************************************************/
+    window.onload = function() {
+      loadStorage();
+      const today = new Date();
+      selectedDateStr = toDateStr(today);
+      currentHeatmapYear = today.getFullYear();
+      currentHeatmapMonth = today.getMonth();
+      renderAll();
+    };
+  </script>
+</body>
+</html>
